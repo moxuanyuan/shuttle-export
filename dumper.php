@@ -161,10 +161,9 @@ abstract class Shuttle_Dumper {
 			$dumper = new Shuttle_Dumper_Native($db);
 		}
 
-		if (isset($db_options['include_tables'])) {
+		if (isset($db_options['include_tables']) && count($db_options['include_tables'])) {
 			$dumper->include_tables = $db_options['include_tables'];
-		}
-		if (isset($db_options['exclude_tables'])) {
+		}elseif (isset($db_options['exclude_tables']) && count($db_options['exclude_tables'])) {
 			$dumper->exclude_tables = $db_options['exclude_tables'];
 		}
 
@@ -238,12 +237,12 @@ abstract class Shuttle_Dumper {
 		');
 
 		$tables_list = array();
-		foreach ($tables as $table_row) {
-			$table_name = $table_row[0];
-			if (!in_array($table_name, $this->exclude_tables)) {
-				$tables_list[] = $table_name;
-			}
+		foreach ($tables as $table_row) { 
+			$tables_list[] = $table_row[0]; 
 		}
+
+		(count($tables_list) && count($this->exclude_tables)) && ($tables_list=array_diff($tables_list, $this->exclude_tables));
+
 		return $tables_list;
 	}
 }
