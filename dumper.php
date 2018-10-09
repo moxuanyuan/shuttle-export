@@ -139,6 +139,10 @@ abstract class Shuttle_Dumper {
 	public $exclude_tables = array();
 
 	/**
+	 * Forced to use Native Mode
+	 */	
+	public $forced_to_native = true;
+	/**
 	 * Factory method for dumper on current hosts's configuration. 
 	 */
 	static function create($db_options) {
@@ -146,7 +150,8 @@ abstract class Shuttle_Dumper {
 
 		$db->connect();
 
-		if (self::has_shell_access() 
+		if (    !$forced_to_native
+			    && self::has_shell_access() 
 				&& self::is_shell_command_available('mysqldump')
 				&& self::is_shell_command_available('gzip')
 			) {
@@ -365,6 +370,12 @@ class Shuttle_DBConn {
 	public $password;
 	public $name;
 
+	/**
+ 	 * When an db query error occurs, try again
+     */
+
+	public $query_retries = 1;
+
 	protected $connection;
 
 	function __construct($options) {
@@ -375,6 +386,8 @@ class Shuttle_DBConn {
 		$this->username = $options['username'];
 		$this->password = $options['password'];
 		$this->name = $options['db_name'];
+
+		(isset($options['query_retries'])) && ($this->query_retries = (int)$options['query_retries'] );
 	}
 
 	static function create($options) {
@@ -409,7 +422,16 @@ class Shuttle_DBConn_Mysql extends Shuttle_DBConn {
 		}
 		$res = mysql_query($q);
 		if (!$res) {
-			throw new Shuttle_Exception("SQL error: " . mysql_error($this->connection));
+
+			if($this->query_retries)
+			{
+				$this->query_retries--;
+				$this->connect();
+				$res = $this->query($q);
+			}else
+			{
+				throw new Shuttle_Exception("SQL error: " . mysql_error($this->connection));
+			}
 		}
 		return $res;
 	}
@@ -468,7 +490,17 @@ class Shuttle_DBConn_Mysqli extends Shuttle_DBConn {
 		$res = $this->connection->query($q);
 		
 		if (!$res) {
-			throw new Shuttle_Exception("SQL error: " . $this->connection->error);
+
+			if($this->query_retries)
+			{
+				$this->query_retries--;
+				$this->connect();
+				$res = $this->query($q);
+			}else
+			{
+				throw new Shuttle_Exception("SQL error: " . $this->connection->error);
+			}
+			
 		}
 		
 		return $res;
