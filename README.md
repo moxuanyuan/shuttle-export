@@ -68,3 +68,13 @@ Dump all tables except for `city`:
     ));
     $world_dumper->dump('world-no-cities.sql.gz');
 
+Set query retries when an db query error occurs
+
+    $world_dumper = Shuttle_Dumper::create(array(
+        'host' => '',
+        'username' => 'root',
+        'password' => '',
+        'db_name' => 'world',
+        'query_retries' => 20
+    ));
+    $world_dumper->dump('world-no-cities.sql.gz');
