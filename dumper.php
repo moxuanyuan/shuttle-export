@@ -137,16 +137,17 @@ abstract class Shuttle_Dumper {
 	 * Specified tables to exclude
 	 */
 	public $exclude_tables = array();
-
-	/**
-	 * Forced to use Native Mode,Default value is "true"
-	 */	
-	public $forced_to_native = true;
+ 
 	/**
 	 * Factory method for dumper on current hosts's configuration. 
 	 */
 	static function create($db_options) {
 		$db = Shuttle_DBConn::create($db_options);
+
+		/**
+		 * Forced to use Native Mode,Default value is "true"
+		 */	
+		$forced_to_native = isset($db_options['forced_to_native'])?$db_options['forced_to_native']:true;
 
 		$db->connect();
 
@@ -165,10 +166,6 @@ abstract class Shuttle_Dumper {
 		}
 		if (isset($db_options['exclude_tables'])) {
 			$dumper->exclude_tables = $db_options['exclude_tables'];
-		}
-
-		if (isset($db_options['forced_to_native'])) {
-			$dumper->forced_to_native = $db_options['forced_to_native'];
 		}
 
 		return $dumper;
